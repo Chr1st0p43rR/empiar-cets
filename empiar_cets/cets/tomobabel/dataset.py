@@ -1,6 +1,6 @@
 from empiar_cets.models import Entry
 
-def cets_dataset_from_entry(
+def start_cets_tomobabel_dataset_from_empiar_entry(
         entry: Entry
 ) -> dict:
     
