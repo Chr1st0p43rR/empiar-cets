@@ -16,6 +16,10 @@ rich = "^14.0.0"
 typer = "^0.16.0"
 requests = "^2.32.4"
 TomoBabel = {path = "/Users/rookyard/projects/TomoBabel-fork", develop = true}
+cryoet-metadata = {path = "/Users/rookyard/projects/cryoet-geometry-fork", develop = true}
+ruamel-yaml = "^0.18.14"
+fs = "^2.4.16"
+parse = "^1.20.2"
 
 [tool.poetry.scripts]
 empiar-cets = "empiar_cets.cli:app"
