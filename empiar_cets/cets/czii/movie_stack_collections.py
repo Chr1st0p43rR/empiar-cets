@@ -6,16 +6,14 @@ from empiar_cets.empiar_utils import EMPIARFileList, get_files_matching_pattern
 from empiar_cets.metadata_models import MdocFile
 
 
-def create_cets_czii_movie_stack_collection_from_region(
+def create_cets_czii_movie_stack_collection_from_region_directive(
+        accession_id: str,
         region: RegionDirective,
         empiar_files: EMPIARFileList, 
         movie_metadata: MdocFile = None, 
 ) -> list[dict]:
     
-    if not region.movie_stacks:
-        raise ValueError("Region does not contain any movie stacks.")
-    
-    cets_movie_stacks = create_cets_czii_movie_stacks_from_region(region, empiar_files, movie_metadata)
+    cets_movie_stacks = create_cets_czii_movie_stacks_from_region_directive(accession_id, region, empiar_files, movie_metadata)
     cets_movie_stack_series = [{"stacks": cets_movie_stacks}]
 
     cets_movie_stack_collection = {"movie_stacks": cets_movie_stack_series}
@@ -25,14 +23,12 @@ def create_cets_czii_movie_stack_collection_from_region(
     return [cets_movie_stack_collection]
 
 
-def create_cets_czii_movie_stacks_from_region(
+def create_cets_czii_movie_stacks_from_region_directive(
+        accession_id: str,
         region: RegionDirective, 
         empiar_files: EMPIARFileList, 
         movie_metadata: MdocFile = None,
 ) -> list[dict]:
-    
-    if not region.movie_stacks:
-        raise ValueError("Region does not contain any movie stacks.")
     
     cets_movie_stacks = []
     for movie_stack in region.movie_stacks:
@@ -45,13 +41,16 @@ def create_cets_czii_movie_stacks_from_region(
         if not movie_stack_paths:
             raise ValueError(f"No files found matching pattern: {movie_stack.file_pattern}")
         
-        # TODO: make a proper EMPIAR url for path here
+        accession_no = accession_id.split("-")[1]
         if len(movie_stack_paths) == 1:
-            cets_movie_stack_dict = {"path": movie_stack_paths[0]}
+            cets_movie_stack_dict = {"path": f"https://ftp.ebi.ac.uk/empiar/world_availability/{accession_no}/data/{movie_stack_paths[0]}"}
         # TODO: else if frame-by-frame to add path to each movie frame in a list. 
 
         if movie_metadata:
-            cets_movie_frames = create_cets_czii_movie_frames_for_volume_image(movie_stack, movie_metadata)
+            cets_movie_frames = create_cets_czii_movie_frames_for_volume_movie(
+                movie_stack, 
+                movie_metadata
+            )
             cets_movie_stack_dict["images"] = cets_movie_frames
 
         cets_movie_stacks.append(cets_movie_stack_dict)
@@ -59,7 +58,7 @@ def create_cets_czii_movie_stacks_from_region(
     return cets_movie_stacks
 
 
-def create_cets_czii_movie_frames_for_volume_image(
+def create_cets_czii_movie_frames_for_volume_movie(
         movie_stack: MovieStack,
         movie_metadata: MdocFile,
 ) -> list[dict]:

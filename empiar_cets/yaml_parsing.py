@@ -5,7 +5,17 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 
-class Metadata(BaseModel):
+class MovieMetadata(BaseModel):
+    label: str
+    file_pattern: str
+
+
+class MovieStack(BaseModel):
+    label: str
+    file_pattern: str
+
+
+class TiltSeriesMetadata(BaseModel):
     label: str
     file_pattern: str
 
@@ -15,17 +25,25 @@ class TiltSeries(BaseModel):
     file_pattern: str
 
 
-class MovieStack(BaseModel):
+class Alignment(BaseModel):
     label: str
     file_pattern: str
-    metadata_label: Optional[str] = None
 
 
+class Tomogram(BaseModel):
+    label: str
+    file_pattern: str
+
+
+# TODO: should metadata be a list? In what circumstances will there be multiple files, and what formats?
 class RegionDirective(BaseModel):
     title: str
-    metadata: Optional[List[Metadata]] = None
-    movie_stacks: Optional[List[MovieStack]] = None    
+    movie_metadata: Optional[MovieMetadata] = None
+    movie_stacks: Optional[List[MovieStack]] = None
+    tilt_series_metadata: Optional[TiltSeriesMetadata] = None
     tilt_series: Optional[List[TiltSeries]] = None
+    alignments: Optional[Alignment] = None
+    tomograms: Optional[List[Tomogram]] = None 
 
 
 def load_empiar_yaml_for_tomobabel(accession_id: str) -> dict:
