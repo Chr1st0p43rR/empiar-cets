@@ -9,8 +9,7 @@ import tomobabel.models
 import cryoet_metadata._base._models
 
 from .models import Entry
-from .cets_object_utils import dict_to_cets_model
-
+from .cets_object_utils import dict_to_cets_model, save_cets_model_to_json
 from .empiar_utils import get_files_for_empiar_entry_cached
 from .yaml_parsing import (
     load_empiar_yaml_for_tomobabel, 
@@ -21,7 +20,7 @@ from .yaml_parsing import (
 from .cets.tomobabel.dataset import start_cets_tomobabel_dataset_from_empiar_entry
 from .cets.tomobabel.movie_stack_set import create_cets_tomobabel_movie_stack_set_from_region
 
-from .cets.czii.region import create_cets_czii_region_from_region
+from .cets.czii.region import create_cets_czii_region_from_region_directive
 
 
 logger = logging.getLogger("empiar_cets.cli")
@@ -93,27 +92,27 @@ def convert_empiar_to_cets(
     elif cets_implementation == "czii":
         
         directive_dict = load_empiar_yaml_for_czii(accession_id)
-        rich.print(f"[green]Loaded YAML for {accession_id}:[/green]")
-
         regions = parse_regions(directive_dict)
-        rich.print(f"[green]Processed regions for {accession_id}:[/green]")
-        rich.print(regions)
 
         empiar_files = get_files_for_empiar_entry_cached(accession_id)
-        rich.print(f"[green]Got {len(empiar_files.files)} files for {accession_id}:[/green]")
 
+        cets_dataset_dict = {}
+        dataset_regions = []
         for region in regions:
-            cets_region_dict = create_cets_czii_region_from_region(
+            cets_region_dict = create_cets_czii_region_from_region_directive(
                 accession_id,
                 region, 
                 empiar_files
             )
-            cets_region = dict_to_cets_model(
-                cets_region_dict, 
-                cets_model_class=cryoet_metadata._base._models.Region
-            )
-            rich.print(f"[green]CETS Region created for {accession_id}:[/green]")
-            rich.print(cets_region)            
+            dataset_regions.append(cets_region_dict)
+
+        cets_dataset_dict["name"] = accession_id
+        cets_dataset_dict["regions"] = dataset_regions
+        cets_dataset = dict_to_cets_model(
+            cets_dataset_dict, 
+            cets_model_class=cryoet_metadata._base._models.Dataset
+        )
+        save_cets_model_to_json(accession_id, accession_id, cets_dataset)      
 
 
 @app.command()
