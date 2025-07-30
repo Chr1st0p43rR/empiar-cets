@@ -5,6 +5,7 @@ from fs.ftpfs import FTPFS
 from pydantic import BaseModel, Field
 import rich
 import parse
+import struct
 
 
 class EMPIARFile(BaseModel, frozen=True):
@@ -74,3 +75,34 @@ def get_files_for_empiar_entry_cached(
             fh.write(model_json_str)
 
     return list_of_files
+
+
+def read_mrc_header_pyfs(filepath):
+
+    ftp_url = 'ftp.ebi.ac.uk'
+
+    # Open FTP filesystem
+    with FTPFS(ftp_url) as ftp_fs:
+        # Open file and read only the first 1024 bytes (header)
+        with ftp_fs.open(filepath, 'rb') as f:
+            header_data = f.read(1024)
+    
+    # Parse MRC header - first 40 bytes contain key info
+    # Format: nx, ny, nz, mode, nxstart, nystart, nzstart, mx, my, mz
+    header_ints = struct.unpack('<10i', header_data[:40])
+    
+    # Extract more header info
+    # Bytes 40-52: cell dimensions (3 floats)
+    cell_dims = struct.unpack('<3f', header_data[40:52])
+    
+    # Bytes 52-64: cell angles (3 floats) 
+    cell_angles = struct.unpack('<3f', header_data[52:64])
+    
+    return {
+        'dimensions': header_ints[:3],  # nx, ny, nz
+        'mode': header_ints[3],         # data type
+        'cell_dimensions': cell_dims,
+        'cell_angles': cell_angles
+        # Add more fields as needed
+    }
+
